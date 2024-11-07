@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Video Upload & Processing</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .upload-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        .status {
+            margin-top: 10px;
+            text-align: center;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h2>Video Content Moderation</h2>
+        <p>Upload a video to detect and blur inappropriate content.</p>
+        <p>Supported formats: MP4, AVI, MOV, MKV, WEBM</p>
+        
+        <form id="uploadForm">
+            <input type="file" id="videoFile" name="video" accept="video/*" required>
+            <button type="submit" id="uploadButton">Upload & Process</button>
+        </form>
+        
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <div class="status" id="status">Processing: 0%</div>
+        </div>
+        
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const status = document.getElementById('status');
+        const message = document.getElementById('message');
+        const uploadButton = document.getElementById('uploadButton');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            const file = document.getElementById('videoFile').files[0];
+            if (!file) {
+                message.innerHTML = '<div class="error">Please select a file</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('video', file);
+            
+            uploadButton.disabled = true;
+            progressContainer.style.display = 'block';
+            message.innerHTML = '<div class="status">Uploading video...</div>';
+            
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    message.innerHTML = '<div class="success">Upload successful. Processing video...</div>';
+                    checkStatus(data.filename);
+                } else {
+                    throw new Error(data.error || 'Upload failed');
+                }
+            } catch (error) {
+                message.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                uploadButton.disabled = false;
+                progressContainer.style.display = 'none';
+            }
+        };
+
+        async function checkStatus(filename) {
+            try {
+                const response = await fetch(`/status/${filename}`);
+                const data = await response.json();
+                
+                progressBar.style.width = `${data.progress}%`;
+                status.textContent = `Processing: ${Math.round(data.progress)}%`;
+                
+                if (data.status === 'completed') {
+                    message.innerHTML = `<div class="success">
+                        Processing complete! 
+                        <a href="/download/processed_${filename}">Download processed video</a>
+                    </div>`;
+                    uploadButton.disabled = false;
+                    progressContainer.style.display = 'none';
+                } else if (data.status === 'error') {
+                    throw new Error(data.error || 'Processing failed');
+                } else {
+                    // Continue checking status
+                    setTimeout(() => checkStatus(filename), 1000);
+                }
+            } catch (error) {
+                message.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                uploadButton.disabled = false;
+                progressContainer.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

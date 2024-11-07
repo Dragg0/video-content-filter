@@ -1,0 +1,30 @@
+// Create .vscode/launch.json in your workspace:
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEEPAI_API_KEY": "your-key-here"
+            }
+        },
+        {
+            "name": "Python: Frame Analyzer",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/model_test_comparator.py",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "DEEPAI_API_KEY": "your-key-here"
+            }
+        }
+    ]
+}

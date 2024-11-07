@@ -1,0 +1,11 @@
+torch
+transformers
+Pillow
+opencv-python
+ultralytics
+deepai
+numpy
+mediapipe
+flask
+faster-whisper
+python-dotenv
