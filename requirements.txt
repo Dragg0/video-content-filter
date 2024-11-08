@@ -1,9 +1,9 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
 torch
 transformers
 Pillow
 opencv-python
 ultralytics
-deepai
 numpy
 mediapipe
 flask
